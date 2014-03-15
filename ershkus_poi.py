@@ -211,9 +211,9 @@ def catalog(cur, isupdate=False, whereTime=None, loglevel=0):
           %(wheretimeALL)s
           AND ST_NumPoints(linestring)>1
       ;""" % {"langinsert":langinsert, "class":icatalog['name'], "moretags":moretags, "langname":langname, "langtype":langtype, "lmoretags":lmoretags, "wheretags":wheretags, "wheretimeALL":wheretimeALL}
-      if (icatalog['name'] == 'cafe'):
-        print execute
-        raise Exception('debug')
+      # if (icatalog['name'] == 'cafe'):
+        # print execute
+        # raise Exception('debug')
       # cur = conn.cursor()
       # if (icatalog['name'] == 'park'):
         # print execute
