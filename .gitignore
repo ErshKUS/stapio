@@ -1,0 +1,12 @@
+# directory for working
+actual/*
+data/*
+log/*
+poi/*
+
+# temp file
+*.pyc
+
+# local file
+.authOsmosis
+stapio_config.py
