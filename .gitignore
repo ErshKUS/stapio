@@ -10,3 +10,4 @@ poi/*
 # local file
 .authOsmosis
 stapio_config.py
+.idea/*
