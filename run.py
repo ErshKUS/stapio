@@ -403,8 +403,8 @@ def load(to_update, log_level=0):
   i = 0
 
   if to_update:
-    file_info['name_d'] = conf.workdir + 'data/load%s.osc.gz'
-    file_info['name_e'] = conf.workdir + 'data/load%se.osc'
+    file_info['name_d'] = conf.workdir + '/data/load%s.osc.gz'
+    file_info['name_e'] = conf.workdir + '/data/load%se.osc'
     file_info['url_list'] = conf.urlmaskosc
     file_info['osmosis_read'] = 'read-xml-change'
     file_info['osmosis_merge'] = 'merge-change --sort-change'
@@ -420,8 +420,8 @@ def load(to_update, log_level=0):
     file_info['day_start'] = file_info['date_s'].strftime("%y%m%d")
     file_info['day_end'] = file_info['date_e'].strftime("%y%m%d")
   else:
-    file_info['name_d'] = conf.workdir + 'data/load%s.pbf'
-    file_info['name_e'] = conf.workdir + 'data/load%se.pbf'
+    file_info['name_d'] = conf.workdir + '/data/load%s.pbf'
+    file_info['name_e'] = conf.workdir + '/data/load%se.pbf'
     file_info['url_list'] = conf.urlpbf
     file_info['osmosis_read'] = 'read-pbf'
     file_info['osmosis_merge'] = 'merge --sort'
@@ -431,7 +431,7 @@ def load(to_update, log_level=0):
   info = {'load': False, 'next_load': True}
 
   if not to_update:
-    urllib.urlretrieve(conf.urlpbfmeta, conf.workdir + "data/load.pbf.meta")
+    urllib.urlretrieve(conf.urlpbfmeta, conf.workdir + "/data/load.pbf.meta")
   while info['next_load']:
     if to_update:
       log.add('load date at ' + file_info['date_s'].strftime(conf.format_datetime),
@@ -490,7 +490,7 @@ def load(to_update, log_level=0):
                           password=conf.addrfull_password)
   if not to_update:
     pbf_meta = ConfigParser.RawConfigParser()
-    pbf_meta.read(conf.workdir + 'data/load.pbf.meta')
+    pbf_meta.read(conf.workdir + '/data/load.pbf.meta')
     file_info['date_e'] = datetime.datetime.strptime(pbf_meta.get('DEFAULT', 'version'), '%Y-%m-%d %H:%M:%S')
     log.add('pbf at ' + file_info['date_e'].strftime(conf.format_datetime), level=log_level, file=file_log)
     log.add('clear db', level=log_level, file=file_log)
@@ -527,7 +527,7 @@ def control_auto(is_end=False, is_error=False, log_level=0):
       if os.path.exists(conf.workactual + 'work.dat'):
         os.remove(conf.workactual + 'work.dat')
 
-    data_dir = conf.workdir + 'data'
+    data_dir = conf.workdir + '/data'
     if data_dir[-1] == os.sep:
       data_dir = data_dir[:-1]
     files = os.listdir(data_dir)
