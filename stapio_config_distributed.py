@@ -92,7 +92,7 @@ deleted_entries_table = 'deleted_entries'
 
 # права на insert, update, delete, select
 addrfull_host = db_host
-addrfull_database = 'osm_simple'
+addrfull_database = db_name
 addrfull_user = db_user
 addrfull_password = db_password
 
