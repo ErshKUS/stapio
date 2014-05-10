@@ -102,14 +102,8 @@ def install():
 
     print 'connect...  ',
     try:
-      if db_superuser_password == '':
-        print 1
-        conn = psycopg2.connect(host=db_host, database='postgres',
-                                user=db_superuser)
-      else:
-        print 2
-        conn = psycopg2.connect(host=db_host, database='postgres',
-                                user=db_superuser, password=db_superuser_password)
+      conn = psycopg2.connect(host=db_host, database='postgres',
+                              user=db_superuser, password=db_superuser_password)
     except:
       print 'Connection error'
       return
