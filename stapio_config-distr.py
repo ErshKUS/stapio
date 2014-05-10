@@ -10,12 +10,14 @@
 # global
 format_datetime = '%Y-%m-%d %H:%M:%S'
 
+stapio_dir = '/stapio/'
+
 file_log = 'stapio_run.log'
 workdir = '/stapio/' # путь до каталога stapio (путь в конце с /)
-workactual = '/stapio/actual/' # путь до каталога дат актуализации данных (путь в конце с /)
-logdir = '/stapio/log/' # путь до каталога логов stapio (путь в конце с /)
-tempdir = '/tmp/ershkus_osmosis/' # путь до каталога временных файлов, в основном osmosis-а (путь в конце с /)
-authFileOsmosis = '/stapio/.authOsmosis' # файл аутентификации postgresql
+workactual = stapio_dir + 'actual/' # путь до каталога дат актуализации данных (путь в конце с /)
+logdir = stapio_dir + 'log/' # путь до каталога логов stapio (путь в конце с /)
+tempdir = '/tmp/stapio/' # путь до каталога временных файлов, в основном osmosis-а (путь в конце с /)
+authFileOsmosis = stapio_dir + 'auth_osmosis' # файл аутентификации postgresql
 runAfter = '' # команда выпоняемая после работы, например очистка temp файлов после работы osmosis
 
 
@@ -25,12 +27,13 @@ cmdindexrotate = 'indexer --all --rotate' # строка реиндекса
 
 
 # osmCatalog
-file_catalog_json = '/osmCatalog/catalog.json' # catalog.json
-path_dictionary_json = '/osmCatalog/dictionary/' # путь до dictionary (путь в конце с /)
-file_tree_json = '/stapio/poi/poidatatree.json' # poidatatree.json (обычно stapio/poi/poidatatree.json)
-file_marker_json = '/stapio/poi/poimarker.json' # poimarker.json (обычно stapio/poi/poimarker.json)
+osm_catalog = '/osmCatalog/'
+file_catalog_json = osm_catalog + 'catalog.json' # catalog.json
+path_dictionary_json = osm_catalog + 'dictionary/' # путь до dictionary (путь в конце с /)
+file_tree_json = stapio_dir + 'poi/poidatatree.json' # poidatatree.json (обычно stapio/poi/poidatatree.json)
+file_marker_json = stapio_dir + 'poi/poimarker.json' # poimarker.json (обычно stapio/poi/poimarker.json)
 path_markers = '/osm.ru/www/img/poi_marker/' # путь до иконок маркеров poi_marker (для генерации poimarker.json)
-file_listPerm_json = '/stapio/poi/poidatalistperm.json' # poidatalistperm.json (обычно stapio/poi/poidatalistperm.json)
+file_listPerm_json = stapio_dir + 'poi/poidatalistperm.json' # poidatalistperm.json (обычно stapio/poi/poidatalistperm.json)
 
 
 # addr config
@@ -76,15 +79,26 @@ GeomInStep = 5000
 # DATABASE CONFIGURATION
 #
 
+db_host = "localhost"
+db_name = "stapio_testing"
+db_user = "stapio_user"
+db_password = "stapio_password"
+
+addr_table = 'addr'
+addr_p_table = 'addr_p'
+poi_table = 'poi'
+addr_upd_table = 'addr_street_upd'
+deleted_entries_table = 'deleted_entries'
+
 # права на insert, update, delete, select
-addrfull_host = 'localhost'
+addrfull_host = db_host
 addrfull_database = 'osm_simple'
-addrfull_user = 'ershkus'
-addrfull_password = ''
+addrfull_user = db_user
+addrfull_password = db_password
 
 # for saveDateForSite
 # права на insert, update, select (можно только к одной таблице 'config')
-sitefull_host = 'localhost'
+sitefull_host = db_host
 sitefull_database = 'osmru_web'
-sitefull_user = 'ershkus'
-sitefull_password = ''
+sitefull_user = db_user
+sitefull_password = db_password
