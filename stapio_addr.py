@@ -1711,11 +1711,11 @@ def updateDeleteAddr(conn, whereTime, loglevel=0):
   log.add ('end updateDeleteAddr', level=loglevel, file=file_log)
 
 
-def insertAddr(conn, loglevel=0):
-  log.add ('start insertAddr', level=loglevel, file=file_log)
+def insert_addr(conn, log_level=0):
+  log.add ('start insertAddr', level=log_level, file=file_log)
 
   # time последнего объекта и удаленные
-  log.add ('get tstamp', level=loglevel, file=file_log)
+  log.add ('get tstamp', level=log_level, file=file_log)
   cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
   cur.execute("""
     SELECT MAX(tstamp) as nupd, (SELECT MAX(deleted_at) FROM deleted_entries) as ndel
@@ -1749,33 +1749,33 @@ def insertAddr(conn, loglevel=0):
   """)
   conn.commit()
 
-  insertFromSimpleOSM(conn = conn, loglevel = loglevel+1)
+  insertFromSimpleOSM(conn = conn, loglevel = log_level+1)
 
-  updateGeomIn(conn = conn, loglevel = loglevel+1)
+  updateGeomIn(conn = conn, loglevel = log_level+1)
 
-  splitStreetAndCentroid(conn = conn, loglevel = loglevel+1)
+  splitStreetAndCentroid(conn = conn, loglevel = log_level+1)
 
-  updateFullName(conn = conn, loglevel = loglevel+1)
+  updateFullName(conn = conn, loglevel = log_level+1)
 
-  insertAddrP(conn = conn, loglevel = loglevel+1)
+  insertAddrP(conn = conn, loglevel = log_level+1)
 
   # сохраним текущую позицию
   utils.saveDate(whereTime=whereTime, file=fupd_time, key_config='dateaddr')
 
-  log.add ('end insertAddr', level=loglevel, file=file_log)
+  log.add ('end insertAddr', level=log_level, file=file_log)
 
 
-def updateAddr(conn, loglevel=0):
-  log.add ('start updateAddr', level=loglevel, file=file_log)
+def update_addr(conn, log_level=0):
+  log.add ('start updateAddr', level=log_level, file=file_log)
 
   cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
   if not os.path.exists(conf.workactual + fupd_time):
-    log.add ('no exists file `'+conf.workactual + fupd_time+'`', level=loglevel+1, file=file_log)
+    log.add ('no exists file `'+conf.workactual + fupd_time+'`', level=log_level+1, file=file_log)
     return
 
   # time последнего объекта и удаленные
-  log.add ('last time edit obj and delete', level=loglevel, file=file_log)
+  log.add ('last time edit obj and delete', level=log_level, file=file_log)
   cur.execute("""
     SELECT MAX(deleted_at) as ndel
       FROM deleted_entries
@@ -1818,23 +1818,23 @@ def updateAddr(conn, loglevel=0):
   """)
   lastIDstreet = cur.fetchone()['maxid']+1
 
-  updateDeleteAddr(conn, whereTime, loglevel+1)
+  updateDeleteAddr(conn, whereTime, log_level+1)
 
-  insertFromSimpleOSM(conn = conn, whereTime = whereTime, loglevel = loglevel+1)
+  insertFromSimpleOSM(conn = conn, whereTime = whereTime, loglevel = log_level+1)
 
-  updateGeomIn(conn, lastID, lastIDstreet, loglevel+1)
+  updateGeomIn(conn, lastID, lastIDstreet, log_level+1)
 
-  splitStreetAndCentroid(conn, lastID, loglevel+1)
+  splitStreetAndCentroid(conn, lastID, log_level+1)
 
-  updateFullName(conn, lastID, loglevel+1)
+  updateFullName(conn, lastID, log_level+1)
 
-  insertAddrP(conn, loglevel+1)
+  insertAddrP(conn, log_level+1)
 
 
   # сохраним текущую позицию
   utils.saveDate(whereTime=whereTime, file=fupd_time, key_config='dateaddr')
 
-  log.add ('end updateAddr', level=loglevel, file=file_log)
+  log.add ('end updateAddr', level=log_level, file=file_log)
 
 def test(conn, loglevel=0):
 
@@ -1857,9 +1857,9 @@ def main():
     log.add ('start main', file=file_log)
     conn = psycopg2.connect(host=conf.addrfull_host, database=conf.addrfull_database, user=conf.addrfull_user, password=conf.addrfull_password)
     if args.action == 'insert':
-      insertAddr(conn, 1)
+      insert_addr(conn, 1)
     elif args.action == 'update':
-      updateAddr(conn, 1)
+      update_addr(conn, 1)
     elif args.action == 'insertAddrSave':
       insertAddrSave(conn, 1)
     elif args.action == 'test':

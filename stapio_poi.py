@@ -492,8 +492,8 @@ def addr(cur, lastID=0, loglevel=0):
   log.add ('end set addr', level=loglevel, file=file_log)
 
 
-def insertPOI(conn, loglevel=0):
-  log.add ('start insert poi', level=loglevel, file=file_log)
+def insert_poi(conn, log_level=0):
+  log.add ('start insert poi', level=log_level, file=file_log)
 
   cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
@@ -522,8 +522,8 @@ def insertPOI(conn, loglevel=0):
   if not whereTime['ndel']:
     whereTime['ndel'] = datetime.datetime.now()
 
-  catalog(cur, loglevel=loglevel+1)
-  addr(cur, loglevel=loglevel+1)
+  catalog(cur, loglevel=log_level+1)
+  addr(cur, loglevel=log_level+1)
   conn.commit()
 
   # сохраним текущую позицию
@@ -532,20 +532,20 @@ def insertPOI(conn, loglevel=0):
   # f.write(json.dumps(whereTime, default=utils.jsondumps))
   # f.close()
 
-  log.add ('end insert poi', level=loglevel, file=file_log)
+  log.add ('end insert poi', level=log_level, file=file_log)
 
 
-def updatePOI(conn, loglevel=0):
-  log.add ('start update poi', level=loglevel, file=file_log)
+def update_poi(conn, log_level=0):
+  log.add ('start update poi', level=log_level, file=file_log)
 
   cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
   if not os.path.exists(conf.workactual + fupd_time):
-    log.add ('no exists file `'+conf.workactual + fupd_time+'`', level=loglevel+1, file=file_log)
+    log.add ('no exists file `'+conf.workactual + fupd_time+'`', level=log_level+1, file=file_log)
     return
 
   # time последнего объекта и удаленные
-  log.add ('last time edit obj and delete', level=loglevel, file=file_log)
+  log.add ('last time edit obj and delete', level=log_level, file=file_log)
   cur.execute("""
     SELECT MAX(deleted_at) as ndel
       FROM deleted_entries
@@ -645,8 +645,8 @@ def updatePOI(conn, loglevel=0):
           )
   """, whereTime)
 
-  catalog(cur, True, whereTime, loglevel=loglevel+1)
-  addr(cur, lastID, loglevel=loglevel+1)
+  catalog(cur, True, whereTime, loglevel=log_level+1)
+  addr(cur, lastID, loglevel=log_level+1)
   conn.commit()
 
   # сохраним текущую позицию
@@ -657,7 +657,7 @@ def updatePOI(conn, loglevel=0):
   # f.close()
 
 
-  log.add ('end update poi', level=loglevel, file=file_log)
+  log.add ('end update poi', level=log_level, file=file_log)
 
 # lang only "lang[0]"
 def createTree(loglevel=0):
@@ -739,9 +739,9 @@ def main():
 
 
     if args.action == 'insert':
-      insertPOI(conn, loglevel = 1)
+      insert_poi(conn, log_level= 1)
     elif args.action == 'update':
-      updatePOI(conn,  loglevel = 1)
+      update_poi(conn,  log_level= 1)
     elif args.action == 'createTree':
       createTree(loglevel = 1)
       createListPermalink(loglevel = 1)
