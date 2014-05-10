@@ -532,7 +532,7 @@ def control_auto(is_end=False, is_error=False, log_level=0):
       data_dir = data_dir[:-1]
     files = os.listdir(data_dir)
     for _file in files:
-      if _file == '.' or _file == '..':
+      if _file == '.' or _file == '..' or _file == '.gitkeep':
         continue
       os.remove(data_dir + os.sep + _file)
 

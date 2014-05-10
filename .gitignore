@@ -11,3 +11,7 @@ poi/*
 .authOsmosis
 stapio_config.py
 .idea/*
+
+gitkeep files:
+!data/.gitkeep
+!log/.gitkeep
