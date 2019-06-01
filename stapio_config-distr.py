@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 #
@@ -45,7 +45,7 @@ use_addr_save = True # использовать сохраненные данн�
 urlpbf = ['http://data.gis-lab.info/osm_dump/dump/latest/RU-KGD.osm.pbf']
 #urlpbf = ['http://data.gis-lab.info/osm_dump/dump/latest/RU.osm.pbf', 'http://data.gis-lab.info/osm_dump/dump/latest/UA.osm.pbf', 'http://data.gis-lab.info/osm_dump/dump/latest/BY.osm.pbf']
 
-urlpbfmeta = 'http://data.gis-lab.info/osm_dump/dump/latest/RU-KGD.osm.pbf.meta'
+# urlpbfmeta = 'http://data.gis-lab.info/osm_dump/dump/latest/RU-KGD.osm.pbf.meta'
 # urlpbfmeta = 'http://data.gis-lab.info/osm_dump/dump/latest/RU.osm.pbf.meta'
 
 # urlmaskosc = ['http://data.gis-lab.info/osm_dump/diff/RU/RU-%(daystart)s-%(dayend)s.osc.gz','http://data.gis-lab.info/osm_dump/diff/UA/UA-%(daystart)s-%(dayend)s.osc.gz','http://data.gis-lab.info/osm_dump/diff/BY/BY-%(daystart)s-%(dayend)s.osc.gz']
@@ -70,9 +70,12 @@ saveDateForSite = True
 
 
 # steps
-nodeStep = 2500000
-wayStep = 1000000
-GeomInStep = 5000
+addr_nodeStep = 2500000
+addr_wayStep = 1000000
+addr_GeomInStep = 100000
+poi_inAddrStep = 8000
+
+countThread = 6
 
 
 #

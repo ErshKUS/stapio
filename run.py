@@ -1,8 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
-import argparse, datetime, ConfigParser, psycopg2, gzip, traceback, os
-import urllib, urllib2
+# отключил meta
+# import ConfigParser
+import argparse, datetime, psycopg2, gzip, traceback, os
+import urllib.request
+#import urllib2
 import subprocess
 import ershkus_addr
 import ershkus_poi
@@ -22,7 +25,7 @@ def cmdrun(cmd, errorText='', loglevel=0):
   PIPE = subprocess.PIPE
   p1 = subprocess.Popen(cmd, shell = True)
   returncode = p1.wait()
-  if returncode <> 0:
+  if returncode != 0:
     log.add (text=errorText, level=loglevel, file=file_log)
     raise Exception('returncode: ' + str(returncode) + ', text error: ' + str(errorText))
 
@@ -72,17 +75,17 @@ def load(update, today=False, loglevel=0):
       log.add (('load, i=%s' % i), level=loglevel+1, file=file_log)
       file['now'] = (file['name_d'] % i)
       url_file = url_file % file
-      try:
-        asock = urllib2.urlopen(url_file)
-      except urllib2.HTTPError, e:
-        if e.code == 404:
-          info['next_load'] = False
-          file['date_e'] = file['date_s'] - datetime.timedelta(days=1)
-          break
-        log.add (('! error download (code=%s)' % e.code), level=loglevel+1, file=file_log)
-        raise e
-      print url_file
-      urllib.urlretrieve(url_file, file['now'])
+      # try:
+        # asock = urllib2.urlopen(url_file)
+      # except urllib2.HTTPError, e:
+        # if e.code == 404:
+          # info['next_load'] = False
+          # file['date_e'] = file['date_s'] - datetime.timedelta(days=1)
+          # break
+        # log.add (('! error download (code=%s)' % e.code), level=loglevel+1, file=file_log)
+        # raise e
+      # print url_file
+      urllib.request.urlretrieve(url_file, file['now'])
       if update:
         log.add ('decompress', level=loglevel+1, file=file_log)
         cmdrun(cmd=('gzip -df '+file['now']), errorText=('! error decompress, i=%s' % i), loglevel=loglevel+1)
@@ -115,6 +118,7 @@ def load(update, today=False, loglevel=0):
     raise Exception('no load from pbf/osc')
   
   conn = psycopg2.connect(host=conf.addrfull_host, database=conf.addrfull_database, user=conf.addrfull_user, password=conf.addrfull_password)
+  conn.set_client_encoding('UTF8')
   if not update:
 		# отключил meta
     # pbfmeta = ConfigParser.RawConfigParser()
@@ -136,13 +140,13 @@ def load(update, today=False, loglevel=0):
 
   log.add ('load in db', level=loglevel, file=file_log)
   
-  if conf.osmosisExport <> '':
-    cmd = 'export ' + conf.osmosisExport + ' && '
-  else:
-    cmd = ''
+  #cmd = 'export JAVACMD_OPTIONS="-Djava.io.tmpdir=' + conf.workdir + 'tmp" && '
+  #cmd = 'export JAVA_OPTIONS="-Xmx8G -server" && '
+  cmd = ''
   
   cmd += 'osmosis -quiet --%(osmosis_read)s file=%(in)s '
-  cmd += '--%(osmosis_writedb)s authFile=%(authFileOsmosis)s'
+  # cmd += '--buffer --%(osmosis_writedb)s authFile=%(authFileOsmosis)s nodeLocationStoreType=TempFile validateSchemaVersion=no'
+  cmd += '--%(osmosis_writedb)s authFile=%(authFileOsmosis)s nodeLocationStoreType=TempFile validateSchemaVersion=no'
   cmd = cmd % file
   # log.add ('cmd: ' + cmd, level=loglevel, file=file_log)
   cmdrun(cmd, errorText='! error load in db', loglevel=loglevel)
@@ -189,6 +193,7 @@ def insert(loglevel=0, noLoad=False, onlyAddr=False, onlyPOI=False):
     load(update = False, loglevel = loglevel+1)
 
   conn = psycopg2.connect(host=conf.addrfull_host, database=conf.addrfull_database, user=conf.addrfull_user, password=conf.addrfull_password)
+  conn.set_client_encoding('UTF8')
 
   if not onlyPOI:
     log.add ('insert addr', level=loglevel, file=file_log)
@@ -210,6 +215,7 @@ def update(loglevel=0, noLoad=False, onlyAddr=False):
     load(update = True, loglevel = loglevel+1)
 
   conn = psycopg2.connect(host=conf.addrfull_host, database=conf.addrfull_database, user=conf.addrfull_user, password=conf.addrfull_password)
+  conn.set_client_encoding('UTF8')
 
   log.add ('update addr', level=loglevel, file=file_log)
   ershkus_addr.updateAddr(conn, loglevel=loglevel+1)
@@ -227,6 +233,7 @@ def update(loglevel=0, noLoad=False, onlyAddr=False):
 def testStep(loglevel=0):
   fileLog = 'test.log'
   conn = psycopg2.connect(host=conf.addrfull_host, database=conf.addrfull_database, user=conf.addrfull_user, password=conf.addrfull_password)
+  conn.set_client_encoding('UTF8')
   cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
   cur.execute("""SELECT min(id) as min, max(id) as max FROM ershkus_search_addr;""")
   limit = cur.fetchone()
@@ -268,7 +275,8 @@ def testStep(loglevel=0):
       
 
 def main():
-  parser = argparse.ArgumentParser(add_help=True, version='0.1')
+  # parser = argparse.ArgumentParser(add_help=True, version='0.1')
+  parser = argparse.ArgumentParser()
   parser.add_argument("--noLoad",action="store_true", help="Не загружать файлы и не грузить osmosis-ом",default=False)
   parser.add_argument("--onlyAddr",action="store_true", help="Обработка только адресной информации",default=False)
   parser.add_argument("--onlyPOI",action="store_true", help="Обработка только POI",default=False)
@@ -293,7 +301,7 @@ def main():
     elif args.action == 'install':
       install(loglevel = 1)
     elif args.action == 'test':
-      print 'test'
+      print ('test')
       testStep(loglevel = 1)
     
     controlAuto(isEnd=True, loglevel=1)

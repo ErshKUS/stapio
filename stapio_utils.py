@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
 # created by ErshKUS
@@ -12,7 +12,7 @@ def jsondumps(obj):
   if isinstance(obj, datetime.datetime):
     return obj.strftime(conf.format_datetime)
 
-def jsonloads(d):  # source = http://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
+def jsonloads(d):  # source=http://stackoverflow.com/questions/455580/json-datetime-between-python-and-javascript
   if isinstance(d, list):
     pairs = enumerate(d)
   elif isinstance(d, dict):
@@ -40,6 +40,7 @@ def saveDate(whereTime, file, key_config):
   if conf.saveDateForSite:
     whereTime['_key_config'] = key_config
     connsite = psycopg2.connect(host=conf.sitefull_host, database=conf.sitefull_database, user=conf.sitefull_user, password=conf.sitefull_password)
+    connsite.set_client_encoding('UTF8')
     cursite = connsite.cursor()
     cursite.execute("""
       UPDATE "config" SET "value"=%(nupd)s WHERE "key"=%(_key_config)s;

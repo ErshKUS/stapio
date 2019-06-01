@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
 import json, psycopg2, os, datetime, sys, traceback
@@ -8,6 +8,8 @@ import codecs
 import stapio_config as conf
 import stapio_utils as utils
 import logger as log
+
+from multiprocessing.dummy import Pool as ThreadPool
 
 # addr_type_id:
   # 5-country
@@ -640,10 +642,10 @@ def insertFromSimpleOSM(conn, whereTime={}, loglevel=0):
   conn.commit()
 
   log.add ('nodes', level=loglevel+2, file=file_log)
-  for n in range(limitNode['min'], limitNode['max']+1, conf.nodeStep):
+  for n in range(limitNode['min'], limitNode['max']+1, conf.addr_nodeStep):
     # log.add ('step = '+str(n)+' / '+str(int((float(n)-limitNode['min'])/(limitNode['max']-limitNode['min'])*100))+'%', level=loglevel+3, file=file_log)
     whereTime['min'] = n
-    whereTime['max'] = n + conf.nodeStep
+    whereTime['max'] = n + conf.addr_nodeStep
     cur.execute("""
       INSERT INTO
         ershkus_search_addr(
@@ -911,10 +913,10 @@ def insertFromSimpleOSM(conn, whereTime={}, loglevel=0):
       postcode;
   """, whereTime)
   log.add ('ways', level=loglevel+2, file=file_log)
-  for n in range(limitWay['min'], limitWay['max']+1, conf.wayStep):
-    # log.add ('step = '+str(n)+' / '+str(int((float(n)-limitWay['min'])/(limitWay['max']-limitWay['min'])*100))+'%', level=loglevel+3, file=file_log)
+  for n in range(limitWay['min'], limitWay['max']+1, conf.addr_wayStep):
+    log.add ('ways '+str(int((float(n)-limitWay['min'])/(limitWay['max']-limitWay['min'])*100))+'%', level=loglevel+3, file=file_log)
     whereTime['min'] = n
-    whereTime['max'] = n + conf.wayStep
+    whereTime['max'] = n + conf.addr_wayStep
     cur.execute("""
       INSERT INTO
         ershkus_search_addr(
@@ -961,10 +963,10 @@ def insertFromSimpleOSM(conn, whereTime={}, loglevel=0):
     """, whereTime)
     conn.commit()
   log.add ('nodes', level=loglevel+2, file=file_log)
-  for n in range(limitNode['min'], limitNode['max']+1, conf.nodeStep):
+  for n in range(limitNode['min'], limitNode['max']+1, conf.addr_nodeStep):
     # log.add ('step = '+str(n)+' / '+str(int((float(n)-limitNode['min'])/(limitNode['max']-limitNode['min'])*100))+'%', level=loglevel+3, file=file_log)
     whereTime['min'] = n
-    whereTime['max'] = n + conf.nodeStep
+    whereTime['max'] = n + conf.addr_nodeStep
     cur.execute("""
       INSERT INTO
         ershkus_search_addr(
@@ -1022,12 +1024,13 @@ def insertFromSimpleOSM(conn, whereTime={}, loglevel=0):
   """)
   conn.commit()
 
-
-
   log.add ('end insertFromSimpleOSM', level=loglevel, file=file_log)
 
+def insertSqlInThread(dataIn):
+  loglevel = dataIn['loglevel']
 
-def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
+
+def updateGeomIn_BACKUP(conn, lastID=0, lastIDstreet=0, loglevel=0):
   log.add ('start updateGeomIn', level=loglevel, file=file_log)
 
   cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -1037,7 +1040,7 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
     limit['min']=lastID
   log.add ('limit: '+str(limit), level=loglevel+1, file=file_log)
   
-  for n in range(limit['min'], limit['max']+1, conf.GeomInStep):
+  for n in range(limit['min'], limit['max']+1, conf.addr_GeomInStep):
     if limit['min'] >= limit['max']:
       break
 
@@ -1061,7 +1064,7 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
             AND (ST_IsValid(search1.geom))
             AND (search1.id>=%(min)s AND search1.id<%(max)s)
             AND (search1.member_role = 'outer' OR search1.member_role is null);
-      """, {'min': n, 'max': n+conf.GeomInStep})
+      """, {'min': n, 'max': n+conf.addr_GeomInStep})
       conn.commit()
 
     log.add ('district in region', level=loglevel+3, file=file_log) # # # # #
@@ -1082,7 +1085,7 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
           AND (ST_IsValid(search1.geom))
           AND (search1.id>=%(min)s AND search1.id<%(max)s)
           AND (search1.member_role = 'outer' OR search1.member_role is null);
-    """, {'min': n, 'max': n+conf.GeomInStep})
+    """, {'min': n, 'max': n+conf.addr_GeomInStep})
     conn.commit()
 
     if conf.use_country:
@@ -1103,7 +1106,7 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
             AND (ST_IsValid(search1.geom))
             AND (search1.id>=%(min)s AND search1.id<%(max)s)
             AND (search1.member_role = 'outer' OR search1.member_role is null);
-      """, {'min': n, 'max': n+conf.GeomInStep})
+      """, {'min': n, 'max': n+conf.addr_GeomInStep})
       conn.commit()
 
     log.add ('city in district', level=loglevel+3, file=file_log) # # # # #
@@ -1125,7 +1128,7 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
           AND (ST_IsValid(search1.geom))
           AND (search1.id>=%(min)s AND search1.id<%(max)s)
           AND (search1.member_role = 'outer' OR search1.member_role is null);
-    """, {'min': n, 'max': n+conf.GeomInStep})
+    """, {'min': n, 'max': n+conf.addr_GeomInStep})
     conn.commit()
 
     log.add ('city in region', level=loglevel+3, file=file_log) # # # # #
@@ -1146,7 +1149,7 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
           AND (ST_IsValid(search1.geom))
           AND (search1.id>=%(min)s AND search1.id<%(max)s)
           AND (search1.member_role = 'outer' OR search1.member_role is null);
-    """, {'min': n, 'max': n+conf.GeomInStep})
+    """, {'min': n, 'max': n+conf.addr_GeomInStep})
     conn.commit()
 
     if conf.use_country:
@@ -1167,7 +1170,7 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
             AND (ST_IsValid(search1.geom))
             AND (search1.id>=%(min)s AND search1.id<%(max)s)
             AND (search1.member_role = 'outer' OR search1.member_role is null);
-      """, {'min': n, 'max': n+conf.GeomInStep})
+      """, {'min': n, 'max': n+conf.addr_GeomInStep})
       conn.commit()
 
     log.add ('village in city', level=loglevel+3, file=file_log) # # # # #
@@ -1190,7 +1193,7 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
           AND (ST_IsValid(search1.geom))
           AND (search1.id>=%(min)s AND search1.id<%(max)s)
           AND (search1.member_role = 'outer' OR search1.member_role is null);
-    """, {'min': n, 'max': n+conf.GeomInStep})
+    """, {'min': n, 'max': n+conf.addr_GeomInStep})
     conn.commit()
 
     log.add ('village in district ', level=loglevel+3, file=file_log) # # # # #
@@ -1212,7 +1215,7 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
           AND (ST_IsValid(search1.geom))
           AND (search1.id>=%(min)s AND search1.id<%(max)s)
           AND (search1.member_role = 'outer' OR search1.member_role is null);
-    """, {'min': n, 'max': n+conf.GeomInStep})
+    """, {'min': n, 'max': n+conf.addr_GeomInStep})
     conn.commit()
 
     log.add ('village in region', level=loglevel+3, file=file_log) # # # # #
@@ -1233,7 +1236,7 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
           AND (ST_IsValid(search1.geom))
           AND (search1.id>=%(min)s AND search1.id<%(max)s)
           AND (search1.member_role = 'outer' OR search1.member_role is null);
-    """, {'min': n, 'max': n+conf.GeomInStep})
+    """, {'min': n, 'max': n+conf.addr_GeomInStep})
     conn.commit()
 
     if conf.use_country:
@@ -1254,7 +1257,7 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
             AND (ST_IsValid(search1.geom))
             AND (search1.id>=%(min)s AND search1.id<%(max)s)
             AND (search1.member_role = 'outer' OR search1.member_role is null);
-      """, {'min': n, 'max': n+conf.GeomInStep})
+      """, {'min': n, 'max': n+conf.addr_GeomInStep})
       conn.commit()
 
     log.add ('housenumber in village', level=loglevel+3, file=file_log) # # # # #
@@ -1277,7 +1280,7 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
           AND (ST_IsValid(search1.geom))
           AND (search1.id>=%(min)s AND search1.id<%(max)s)
           AND (search1.member_role = 'outer' OR search1.member_role is null);
-    """, {'min': n, 'max': n+conf.GeomInStep})
+    """, {'min': n, 'max': n+conf.addr_GeomInStep})
     conn.commit()
 
     log.add ('housenumber in city', level=loglevel+3, file=file_log) # # # # #
@@ -1299,7 +1302,7 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
           AND (ST_IsValid(search1.geom))
           AND (search1.id>=%(min)s AND search1.id<%(max)s)
           AND (search1.member_role = 'outer' OR search1.member_role is null);
-    """, {'min': n, 'max': n+conf.GeomInStep})
+    """, {'min': n, 'max': n+conf.addr_GeomInStep})
     conn.commit()
 
 
@@ -1350,12 +1353,376 @@ def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
     # log.add ('insert region', loglevel+3) # # # # #
     # cur = conn.cursor()
     # cur.execute("""
-    # """, {'min': n, 'max': n+conf.GeomInStep})
+    # """, {'min': n, 'max': n+conf.addr_GeomInStep})
     # conn.commit()
 
   log.add ('end updateGeomIn', level=loglevel, file=file_log)
 
+def updateGeomIn(conn, lastID=0, lastIDstreet=0, loglevel=0):
+  log.add ('start updateGeomIn', level=loglevel, file=file_log)
 
+  cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+  cur.execute("""SELECT min(id) as min, max(id) as max FROM ershkus_search_addr;""")
+  limit = cur.fetchone()
+  if lastID:
+    limit['min']=lastID
+  log.add ('limit: '+str(limit), level=loglevel+1, file=file_log)
+  
+  dataToThread = []
+
+  for n in range(limit['min'], limit['max']+1, conf.addr_GeomInStep):
+    if limit['min'] >= limit['max']:
+      break
+
+    dataIn = {}
+    dataIn['loglevel'] = loglevel
+    dataIn['lastIDstreet'] = lastIDstreet
+    dataIn['min'] = limit['min']
+    dataIn['max'] = limit['max']
+    dataIn['n'] = n
+   
+    dataToThread.append(dataIn)
+    
+  
+  pool = ThreadPool(conf.countThread)
+  results = pool.map(updateGeomInThread, dataToThread)
+  pool.close()
+  pool.join()
+
+
+
+    # log.add ('insert region', loglevel+3) # # # # #
+    # cur = conn.cursor()
+    # cur.execute("""
+    # """, {'min': n, 'max': n+conf.addr_GeomInStep})
+    # conn.commit()
+
+  log.add ('end updateGeomIn', level=loglevel, file=file_log)
+
+  
+def updateGeomInThread(dataIn):
+  
+  loglevel = dataIn['loglevel']
+  lastIDstreet = dataIn['lastIDstreet']
+  
+  limit = {}
+  limit['min'] = dataIn['min']
+  limit['max'] = dataIn['max']
+  
+  n = dataIn['n']
+  
+  conn = psycopg2.connect(host=conf.addrfull_host, database=conf.addrfull_database, user=conf.addrfull_user, password=conf.addrfull_password)
+  conn.set_client_encoding('UTF8')
+  
+
+  log.add ('step = '+str(n)+' / '+str(int((float(n)-limit['min'])/(limit['max']-limit['min'])*100))+'%', level=loglevel+2, file=file_log)
+
+  if conf.use_country:
+    # log.add ('region in country', level=loglevel+3, file=file_log) # # # # #
+    cur = conn.cursor()
+    cur.execute("""
+      UPDATE ershkus_search_addr AS search1
+        SET
+          country=search2.country, country_id=search2.id
+        FROM ershkus_search_addr AS search2
+        WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+          AND search2.country is not null
+          AND search1.country is null
+          AND search1.region is not null
+          AND search2.addr_type_id = 5 --country
+          AND search1.addr_type_id = 10 --region
+          AND (ST_IsValid(search2.geom))
+          AND (ST_IsValid(search1.geom))
+          AND (search1.id>=%(min)s AND search1.id<%(max)s)
+          AND (search1.member_role = 'outer' OR search1.member_role is null);
+    """, {'min': n, 'max': n+conf.addr_GeomInStep})
+    conn.commit()
+
+  # log.add ('district in region', level=loglevel+3, file=file_log) # # # # #
+  cur = conn.cursor()
+  cur.execute("""
+    UPDATE ershkus_search_addr AS search1
+      SET
+        country=search2.country, country_id=search2.country_id,
+        region=search2.region, region_id=search2.id
+      FROM ershkus_search_addr AS search2
+      WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+        AND search2.region is not null
+        AND search1.region is null
+        AND search1.district is not null
+        AND search2.addr_type_id = 10 --region
+        AND search1.addr_type_id = 15 --district
+        AND (ST_IsValid(search2.geom))
+        AND (ST_IsValid(search1.geom))
+        AND (search1.id>=%(min)s AND search1.id<%(max)s)
+        AND (search1.member_role = 'outer' OR search1.member_role is null);
+  """, {'min': n, 'max': n+conf.addr_GeomInStep})
+  conn.commit()
+
+  if conf.use_country:
+    # log.add ('district in country', level=loglevel+3, file=file_log) # # # # #
+    cur = conn.cursor()
+    cur.execute("""
+      UPDATE ershkus_search_addr AS search1
+        SET
+          country=search2.country, country_id=search2.id
+        FROM ershkus_search_addr AS search2
+        WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+          AND search2.country is not null
+          AND search1.country is null
+          AND search1.district is not null
+          AND search2.addr_type_id = 5 --country
+          AND search1.addr_type_id = 15 --district
+          AND (ST_IsValid(search2.geom))
+          AND (ST_IsValid(search1.geom))
+          AND (search1.id>=%(min)s AND search1.id<%(max)s)
+          AND (search1.member_role = 'outer' OR search1.member_role is null);
+    """, {'min': n, 'max': n+conf.addr_GeomInStep})
+    conn.commit()
+
+  # log.add ('city in district', level=loglevel+3, file=file_log) # # # # #
+  cur = conn.cursor()
+  cur.execute("""
+    UPDATE ershkus_search_addr AS search1
+      SET
+        country=search2.country, country_id=search2.country_id,
+        region=search2.region, region_id=search2.region_id,
+        district=search2.district, district_id=search2.id
+      FROM ershkus_search_addr AS search2
+      WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+        AND search2.district is not null
+        AND search1.district is null
+        AND search1.city is not null
+        AND search2.addr_type_id = 15 --district
+        AND search1.addr_type_id = 20 --city
+        AND (ST_IsValid(search2.geom))
+        AND (ST_IsValid(search1.geom))
+        AND (search1.id>=%(min)s AND search1.id<%(max)s)
+        AND (search1.member_role = 'outer' OR search1.member_role is null);
+  """, {'min': n, 'max': n+conf.addr_GeomInStep})
+  conn.commit()
+
+  # log.add ('city in region', level=loglevel+3, file=file_log) # # # # #
+  cur = conn.cursor()
+  cur.execute("""
+    UPDATE ershkus_search_addr AS search1
+      SET
+        country=search2.country, country_id=search2.country_id,
+        region=search2.region, region_id=search2.id
+      FROM ershkus_search_addr AS search2
+      WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+        AND search2.region is not null
+        AND search1.region is null
+        AND search1.city is not null
+        AND search2.addr_type_id = 10 --region
+        AND search1.addr_type_id = 20 --city
+        AND (ST_IsValid(search2.geom))
+        AND (ST_IsValid(search1.geom))
+        AND (search1.id>=%(min)s AND search1.id<%(max)s)
+        AND (search1.member_role = 'outer' OR search1.member_role is null);
+  """, {'min': n, 'max': n+conf.addr_GeomInStep})
+  conn.commit()
+
+  if conf.use_country:
+    # log.add ('city in country', level=loglevel+3, file=file_log) # # # # #
+    cur = conn.cursor()
+    cur.execute("""
+      UPDATE ershkus_search_addr AS search1
+        SET
+          country=search2.country, country_id=search2.id
+        FROM ershkus_search_addr AS search2
+        WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+          AND search2.country is not null
+          AND search1.country is null
+          AND search1.city is not null
+          AND search2.addr_type_id = 5 --country
+          AND search1.addr_type_id = 20 --city
+          AND (ST_IsValid(search2.geom))
+          AND (ST_IsValid(search1.geom))
+          AND (search1.id>=%(min)s AND search1.id<%(max)s)
+          AND (search1.member_role = 'outer' OR search1.member_role is null);
+    """, {'min': n, 'max': n+conf.addr_GeomInStep})
+    conn.commit()
+
+  # log.add ('village in city', level=loglevel+3, file=file_log) # # # # #
+  cur = conn.cursor()
+  cur.execute("""
+    UPDATE ershkus_search_addr AS search1
+      SET
+        country=search2.country, country_id=search2.country_id,
+        region=search2.region, region_id=search2.region_id,
+        district=search2.district, district_id=search2.district_id,
+        city=search2.city, city_id=search2.id
+      FROM ershkus_search_addr AS search2
+      WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+        AND search2.city is not null
+        AND search1.city is null
+        AND search1.village is not null
+        AND search2.addr_type_id = 20 --city
+        AND search1.addr_type_id = 25 --village
+        AND (ST_IsValid(search2.geom))
+        AND (ST_IsValid(search1.geom))
+        AND (search1.id>=%(min)s AND search1.id<%(max)s)
+        AND (search1.member_role = 'outer' OR search1.member_role is null);
+  """, {'min': n, 'max': n+conf.addr_GeomInStep})
+  conn.commit()
+
+  # log.add ('village in district ', level=loglevel+3, file=file_log) # # # # #
+  cur = conn.cursor()
+  cur.execute("""
+    UPDATE ershkus_search_addr AS search1
+      SET
+        country=search2.country, country_id=search2.country_id,
+        region=search2.region, region_id=search2.region_id,
+        district=search2.district, district_id=search2.id
+      FROM ershkus_search_addr AS search2
+      WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+        AND search2.district is not null
+        AND search1.district is null
+        AND search1.village is not null
+        AND search2.addr_type_id = 15 --district
+        AND search1.addr_type_id = 25 --village
+        AND (ST_IsValid(search2.geom))
+        AND (ST_IsValid(search1.geom))
+        AND (search1.id>=%(min)s AND search1.id<%(max)s)
+        AND (search1.member_role = 'outer' OR search1.member_role is null);
+  """, {'min': n, 'max': n+conf.addr_GeomInStep})
+  conn.commit()
+
+  # log.add ('village in region', level=loglevel+3, file=file_log) # # # # #
+  cur = conn.cursor()
+  cur.execute("""
+    UPDATE ershkus_search_addr AS search1
+      SET
+        country=search2.country, country_id=search2.country_id,
+        region=search2.region, region_id=search2.id
+      FROM ershkus_search_addr AS search2
+      WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+        AND search2.region is not null
+        AND search1.region is null
+        AND search1.village is not null
+        AND search2.addr_type_id = 10 --region
+        AND search1.addr_type_id = 25 --village
+        AND (ST_IsValid(search2.geom))
+        AND (ST_IsValid(search1.geom))
+        AND (search1.id>=%(min)s AND search1.id<%(max)s)
+        AND (search1.member_role = 'outer' OR search1.member_role is null);
+  """, {'min': n, 'max': n+conf.addr_GeomInStep})
+  conn.commit()
+
+  if conf.use_country:
+    # log.add ('village in country', level=loglevel+3, file=file_log) # # # # #
+    cur = conn.cursor()
+    cur.execute("""
+      UPDATE ershkus_search_addr AS search1
+        SET
+          country=search2.country, country_id=search2.id
+        FROM ershkus_search_addr AS search2
+        WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+          AND search2.country is not null
+          AND search1.country is null
+          AND search1.village is not null
+          AND search2.addr_type_id = 5 --country
+          AND search1.addr_type_id = 25 --village
+          AND (ST_IsValid(search2.geom))
+          AND (ST_IsValid(search1.geom))
+          AND (search1.id>=%(min)s AND search1.id<%(max)s)
+          AND (search1.member_role = 'outer' OR search1.member_role is null);
+    """, {'min': n, 'max': n+conf.addr_GeomInStep})
+    conn.commit()
+
+  # log.add ('housenumber in village', level=loglevel+3, file=file_log) # # # # #
+  cur = conn.cursor()
+  cur.execute("""
+    UPDATE ershkus_search_addr AS search1
+      SET
+        country=search2.country, country_id=search2.country_id,
+        region=search2.region, region_id=search2.region_id,
+        district=search2.district, district_id=search2.district_id,
+        city=search2.city, city_id=search2.city_id,
+        village=search2.village, village_id=search2.id
+      FROM ershkus_search_addr AS search2
+      WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+        AND search2.village is not null
+        AND search1.village is null
+        AND (search1.street is not null or search1.housenumber is not null)
+        AND search2.addr_type_id = 25 --village
+        AND (ST_IsValid(search2.geom))
+        AND (ST_IsValid(search1.geom))
+        AND (search1.id>=%(min)s AND search1.id<%(max)s)
+        AND (search1.member_role = 'outer' OR search1.member_role is null);
+  """, {'min': n, 'max': n+conf.addr_GeomInStep})
+  conn.commit()
+
+  # log.add ('housenumber in city', level=loglevel+3, file=file_log) # # # # #
+  cur = conn.cursor()
+  cur.execute("""
+    UPDATE ershkus_search_addr AS search1
+      SET
+        country=search2.country, country_id=search2.country_id,
+        region=search2.region, region_id=search2.region_id,
+        district=search2.district, district_id=search2.district_id,
+        city=search2.city, city_id=search2.id
+      FROM ershkus_search_addr AS search2
+      WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+        AND search2.city is not null
+        AND search1.city is null
+        AND (search1.street is not null or search1.housenumber is not null)
+        AND search2.addr_type_id = 20 --city
+        AND (ST_IsValid(search2.geom))
+        AND (ST_IsValid(search1.geom))
+        AND (search1.id>=%(min)s AND search1.id<%(max)s)
+        AND (search1.member_role = 'outer' OR search1.member_role is null);
+  """, {'min': n, 'max': n+conf.addr_GeomInStep})
+  conn.commit()
+
+  # log.add ('street in village', level=loglevel+1, file=file_log) # # # # #
+  cur = conn.cursor()
+  cur.execute("""
+    UPDATE ershkus_addr_street_upd AS search1
+      SET
+        country=search2.country, country_id=search2.country_id,
+        region=search2.region, region_id=search2.region_id,
+        district=search2.district, district_id=search2.district_id,
+        city=search2.city, city_id=search2.city_id,
+        village=search2.village, village_id=search2.id
+      FROM ershkus_search_addr AS search2
+      WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+        AND search2.village is not null
+        AND search1.village is null
+        AND search1.street is not null
+        AND search2.addr_type_id = 25 --village
+        AND (ST_IsValid(search2.geom))
+        AND (ST_IsValid(search1.geom))
+        AND (search1.id>=%(min)s AND search1.id<%(max)s)
+        AND search1.id >= %(lastIDstreet)s;
+  """, {'min': n, 'max': n+conf.addr_GeomInStep, "lastIDstreet": lastIDstreet})
+  conn.commit()
+
+  # log.add ('street in city', level=loglevel+1, file=file_log) # # # # #
+  cur = conn.cursor()
+  cur.execute("""
+    UPDATE ershkus_addr_street_upd AS search1
+      SET
+        country=search2.country, country_id=search2.country_id,
+        region=search2.region, region_id=search2.region_id,
+        district=search2.district, district_id=search2.district_id,
+        city=search2.city, city_id=search2.id
+      FROM ershkus_search_addr AS search2
+      WHERE ((search2.geom && search1.geom) AND ST_Covers(search2.geom, search1.geom))
+        AND search2.city is not null
+        AND search1.city is null
+        AND search1.street is not null
+        AND search2.addr_type_id = 20 --city
+        AND (ST_IsValid(search2.geom))
+        AND (ST_IsValid(search1.geom))
+        AND (search1.id>=%(min)s AND search1.id<%(max)s)
+        AND search1.id >= %(lastIDstreet)s;
+  """, {'min': n, 'max': n+conf.addr_GeomInStep, "lastIDstreet": lastIDstreet})
+  conn.commit()
+  
+  
+  
 def splitStreetAndCentroid(conn, lastID=0, loglevel=0):
   log.add ('start splitStreetAndCentroid', level=loglevel, file=file_log)
 
@@ -1850,12 +2217,14 @@ def test(conn, loglevel=0):
 
 def main():
   try:
-    parser = argparse.ArgumentParser(add_help=True, version='0.6')
+    # parser = argparse.ArgumentParser(add_help=True, version='0.6')
+    parser = argparse.ArgumentParser()
     parser.add_argument('action', metavar='action', type=str, choices=['insert', 'update', 'insertAddrSave', 'test'], help='action operations `insert` or `update` or `insertAddrSave`')
     args = parser.parse_args()
 
     log.add ('start main', file=file_log)
     conn = psycopg2.connect(host=conf.addrfull_host, database=conf.addrfull_database, user=conf.addrfull_user, password=conf.addrfull_password)
+    conn.set_client_encoding('UTF8')
     if args.action == 'insert':
       insertAddr(conn, 1)
     elif args.action == 'update':

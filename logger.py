@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
 # created by ErshKUS
@@ -22,7 +22,7 @@ def sendmail(text, head="message from Stapio"):
 
   try:
     smtpObj = smtplib.SMTP(conf.smtp_server)
-    if conf.email_pass <> '':
+    if conf.email_pass != '':
       smtpObj.login(conf.email_from, conf.email_pass)
     smtpObj.sendmail(sender, receivers, message)
   except SMTPException:
@@ -32,10 +32,10 @@ def sendmail(text, head="message from Stapio"):
 def add(text, level=0, file=default_file_log, finish=False):
   outtext = ''
   nowtime = datetime.datetime.now()
-  if timer.has_key(level+1):
+  if level+1 in timer:
     outtext = '#  timer = ' + str(nowtime-timer[level+1]) + '\n'
     timer.pop(level+1)
-  if timer.has_key(level):
+  if level in timer:
     pre='#  '
     if outtext != '':
       pre = (' '*16) + (' '*(2+2*level)) + '#  '
@@ -43,7 +43,7 @@ def add(text, level=0, file=default_file_log, finish=False):
   outtext = outtext[:-1]
   outtext += '\n' + (str(nowtime.strftime("%Y-%m-%d %H:%M:%S")) +(' '*(2+2*level))+ text)
   timer[level] = nowtime
-  print outtext,
+  print (outtext),
   if conf.write_in_file:
     file_log_d = open(conf.logdir + file,'a')
     file_log_d.write(outtext+'\n')
