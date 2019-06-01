@@ -18,6 +18,9 @@ tempdir = '/tmp/ershkus_osmosis/' # путь до каталога времен�
 authFileOsmosis = '/stapio/.authOsmosis' # файл аутентификации postgresql
 runAfter = '' # команда выпоняемая после работы, например очистка temp файлов после работы osmosis
 
+#osmosisExport = 'JAVACMD_OPTIONS="-Djava.io.tmpdir=' + workdir + 'tmp"' # export для java у osmosis. "Djava.io.tmpdir" указывает где складывать temp
+osmosisExport = '' # или оставить пустой
+
 
 # sphinx
 sphinx_reindex = True # делать реиндекс сфинкса по окончании работы

@@ -60,8 +60,9 @@ def load(update, today=False, loglevel=0):
     file['osmosis_writedb'] = 'write-pgsql'
 
   info = {'load':False, 'next_load':True}
-  if not update:
-    urllib.urlretrieve(conf.urlpbfmeta, conf.workdir + "data/load.pbf.meta")
+  # отключил meta
+	# if not update:
+    # urllib.urlretrieve(conf.urlpbfmeta, conf.workdir + "data/load.pbf.meta")
   while info['next_load']:
     if update:
       log.add ('load date at ' + file['date_s'].strftime(conf.format_datetime), level=loglevel, file=file_log)
@@ -115,10 +116,11 @@ def load(update, today=False, loglevel=0):
   
   conn = psycopg2.connect(host=conf.addrfull_host, database=conf.addrfull_database, user=conf.addrfull_user, password=conf.addrfull_password)
   if not update:
-    pbfmeta = ConfigParser.RawConfigParser()
-    pbfmeta.read(conf.workdir + 'data/load.pbf.meta')
-    file['date_e'] = datetime.datetime.strptime(pbfmeta.get('DEFAULT', 'version'), '%Y-%m-%d %H:%M:%S')
-    log.add ('pbf at ' + file['date_e'].strftime(conf.format_datetime), level=loglevel, file=file_log)
+		# отключил meta
+    # pbfmeta = ConfigParser.RawConfigParser()
+    # pbfmeta.read(conf.workdir + 'data/load.pbf.meta')
+    # file['date_e'] = datetime.datetime.strptime(pbfmeta.get('DEFAULT', 'version'), '%Y-%m-%d %H:%M:%S')
+    # log.add ('pbf at ' + file['date_e'].strftime(conf.format_datetime), level=loglevel, file=file_log)
     log.add ('clear db', level=loglevel, file=file_log)
     cur = conn.cursor()
     cur.execute("""
@@ -133,16 +135,24 @@ def load(update, today=False, loglevel=0):
     conn.commit()
 
   log.add ('load in db', level=loglevel, file=file_log)
-  cmd = 'osmosis -quiet --%(osmosis_read)s file=%(in)s '
+  
+  if conf.osmosisExport <> '':
+    cmd = 'export ' + conf.osmosisExport + ' && '
+  else:
+    cmd = ''
+  
+  cmd += 'osmosis -quiet --%(osmosis_read)s file=%(in)s '
   cmd += '--%(osmosis_writedb)s authFile=%(authFileOsmosis)s'
   cmd = cmd % file
+  # log.add ('cmd: ' + cmd, level=loglevel, file=file_log)
   cmdrun(cmd, errorText='! error load in db', loglevel=loglevel)
 
   # сохраним текущую позицию
-  log.add ('save date', level=loglevel, file=file_log)
-  f = open(conf.workactual + 'upd_date.dat','w')
-  f.write(file['date_e'].strftime(conf.format_datetime))
-  f.close()
+  # отключил meta
+  # log.add ('save date', level=loglevel, file=file_log)
+  # f = open(conf.workactual + 'upd_date.dat','w')
+  # f.write(file['date_e'].strftime(conf.format_datetime))
+  # f.close()
 
   log.add ('load complite', level=loglevel, file=file_log)
 
